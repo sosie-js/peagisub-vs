@@ -2,27 +2,27 @@ rockspec_format = "3.0"
 package = "peagisub"
 version = "1.0.0-1"
 source = {
-   url = "git+https://github.com/MartinHelmut/lua-series",
+   url = "git+https://github.com/sosie-js/peagisub-vs",
    tag = "v1.0.0"
 }
 description = {
-   summary = "The companion repository to my Lua blog series.",
+   summary = "The lua helper to configure the aegisub-vapoursynth python bridge aegisub-vs.py",
    detailed = [[
-        This package is for educational purposes and contains only some test
-        code for my Lua series of articles.
+        This package is my contribution to Arch1t3cht aegisub fork.
     ]],
-   homepage = "https://martin-fieber.de/series/lua/",
+   homepage = "https://sosie.sos-productions.com",
    license = "MIT",
-   issues_url = "https://github.com/MartinHelmut/lua-series/issues",
+   issues_url = "https://github.com/sosie-js/peagisub-vs/issues",
    labels = {
-      "lua-series",
-      "educational"
+      "aegisub",
+      "vapoursynth",
+      "lua",
+      "python"
    },
    maintainer = "SoSie <sosie@sos-productions.com>"
 }
 dependencies = {
    "lua >= 5.1, < 5.5",
-   "inspect >= 3.1"
 }
 build = {
    type = "builtin",
