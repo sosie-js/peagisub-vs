@@ -192,7 +192,7 @@ Like on linux, you can use $VAPOURSYNTH_CONF_PATH to provide your own configurat
             root_plugin= root_plugin .. "/Library/Application Support/VapourSynth/vapoursynth.conf"
             root_plugin=os.getenv("VAPOURSYNTH_CONF_PATH") or root_plugin
         end
-        return root_pluging
+        return root_plugin
 end
 
 -- Dumps vars to a config file so aegisub-vs.py script can retrieve them after
