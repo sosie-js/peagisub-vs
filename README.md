@@ -19,7 +19,24 @@ How to get Lua and LuaRocks is in detail covered in [the first article of the Lu
 
 ## Setup and run
 
-### With direnv
+First [install LuaRocks for your OS](https://github.com/luarocks/luarocks/wiki/)
+Note : you may not need to compile it from sources as suggested in the wiki on Ubuntu/Debian just do
+```shell
+sudo apt install lua luarocks
+```
+
+As indicated in [the Luarock wiki](https://github.com/luarocks/luarocks/wiki/Using-LuaRocks#user-content-Commandline_tools_and_the_system_path)  an extra step du declared /usr/local in your path should be done if you want lua script accessible globally but here we will add the --local flag to avoid to be annoyed by this
+
+```shell
+ luarocks install --local peagisub
+```
+### Locally with lua as current user with the LuaRocks module 'peagisub' installed 
+
+```shell
+ lua -l peagisub -e 'os.exit()'
+```
+
+### Locally with direnv from the source package
 
 After cloning the repo and entering the project folder, load the project environment context with `direnv allow`, and install all dependencies.
 
@@ -34,7 +51,7 @@ Now you can run any script from the project.
 $ lua src/main.lua
 ```
 
-### Without direnv
+### Locally without direnv from the source package
 
 After cloning the repo and entering the project folder install all dependencies.
 
