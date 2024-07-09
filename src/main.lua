@@ -11,7 +11,7 @@ Exports all the vars path from aegisub to make it availaible under python
 script_name="Generate Aegisub config file"
 script_description="Export paths specifiers to a config file to be used by python"
 script_author="SoSie-js / github"
-script_version="1.0"
+script_version="1.1"
 
 
 -- Detect os name
