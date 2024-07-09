@@ -1,9 +1,12 @@
 # (P) Aegisub-vs
 
 This is lua the companion for aegisub to retrieve path specifiers as well vapoursynth vars
-to be able to setup the aegisub-vs python bridge provided in the Aegisub forked version
-from Arch1t3cht. Initially I put the script in ?user/automation/autoload but I need 
+to be able to setup the aegisub-vs python bridge provided in the [Aegisub forked version
+from Arch1t3cht](https://github.com/arch1t3cht/Aegisub/releases) BIG THANKS to HIM.
+Initially I put the script in ?user/automation/autoload but I need 
 to trigger it without aegisub installed as a module from python side.
+
+The [published package can be found on Luarocks](https://luarocks.org/modules/sosie-js/peagisub)
 
 ## Requirements
 
