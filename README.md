@@ -33,7 +33,7 @@ As indicated in [the Luarock wiki](https://github.com/luarocks/luarocks/wiki/Usi
 ### Locally with lua as current user with the LuaRocks module 'peagisub' installed 
 
 ```shell
- lua -l peagisub -e 'os.exit()'
+eval "$(luarocks path --bin)" && lua -l peagisub -e 'os.exit()'
 ```
 
 ### Locally with direnv from the source package
