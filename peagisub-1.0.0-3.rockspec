@@ -22,7 +22,9 @@ description = {
    maintainer = "SoSie <sosie@sos-productions.com>"
 }
 dependencies = {
-   "lua >= 5.1, < 5.5"
+   "lua >= 5.1, < 5.5",
+   "dkjson >= 2.8",
+   "lua-path >= 0.3.1"
 }
 build = {
    type = "builtin",
