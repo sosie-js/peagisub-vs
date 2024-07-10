@@ -9,9 +9,9 @@ Exports all the vars path from aegisub to make it availaible under python
 
 --Script properties
 script_name="Generate Aegisub config file"
-script_description="Export paths specifiers to a config file to be used by python"
+script_description="Exports paths specifiers to a config file to be used by python"
 script_author="SoSie-js / github"
-script_version="1.1"
+script_version="1.2"
 
 
 -- Detect os name
@@ -46,9 +46,10 @@ end
 --Minimal aegisub.decode_path  replacement when aegisub is closed or not availaible
 -- can not fully decode full pathnames only one isolated specifier at a time
 function aegisub_decode_path(spec)
-    local path = "?"
+    local path ="?"
     if spec == "?data" then
         --[The location where application data are stored. On Windows this is the installation directory (the location of the .exe). On Mac OS X this is inside the application bundle. On other POSIX-like systems this is $prefix/share/aegisub/]]
+        return "?"
     end
     if spec == "?user" then
         --[[
@@ -63,12 +64,13 @@ function aegisub_decode_path(spec)
         if os.name() == "Linux"  then
             path="/home/"..os.getenv("USER") .. "/.aegisub"
         end
+        return path
     end
     
     if spec == "?temp" then
         --[[The system temp directory. Audio cache and any required temporary subtitle files are stored here.
         ]]
-        path="/tmp"
+        return "/tmp"
     end
     
     if spec == "?local" then
@@ -80,30 +82,34 @@ function aegisub_decode_path(spec)
         else
             path=aegisub_decode_path("?user")
         end
+        return path
     end
     
     if spec == "?script" then
         --[[Only defined if a subtitles file is open and saved somewhere, in which case it points to the directory the script is in.
         ]]
+        return "?"
     end
     
     if spec == "?video" then
         --[[Only defined if a video file is loaded. Points to the directory the video file in is. Do note that this is not a good place to save things with dummy video loaded.
         ]]
+        return "?"
     end
     
     if spec == "?audio" then
         --[[Only defined if an audio file is loaded. Points to the directory the audio file in is. Do note that this is not a good place to save things with dummy audio loaded.
         ]]
+        return "?"
     end
    
     -- extra for aegisub_vs's cache dir, maybe ?temp/.aegisub_vscache 
     -- would be better as /tmp this is on tmpfs on SBCs..
     if  spec == "?cache" then
-        path=aegisub_decode_path("?local") .. "/vscache"
+        return aegisub_decode_path("?local") .. "/vscache"
     end
    
-    return path 
+   return path
 end
 
 --export key=value entry (UserPluginDir SystemPluginDir) of vapoursynth.conf 
@@ -140,7 +146,7 @@ function locate_vapoursynth_conf()
         if os.name() == "Linux" then
             root_plugin=os.getenv("XDG_CONFIG_HOME") or os.getenv("HOME").."/.config"
             root_plugin= root_plugin .. "/vapoursynth/vapoursynth.conf"
-            root_plugin=os.getenv("VAPOURSYNTH_CONF_PATH") or root_plugin
+            return os.getenv("VAPOURSYNTH_CONF_PATH") or root_plugin
         end
         --[[
         
@@ -175,7 +181,7 @@ User plugins should never be put into the vs-coreplugins directory.
         ]]
         if os.name() == "Windows" then
            --TODO: fixe me I am lazy here because windows has karma
-           root_pluging=nil
+           return nil
         end
         
         --[[
@@ -190,9 +196,8 @@ Like on linux, you can use $VAPOURSYNTH_CONF_PATH to provide your own configurat
         if os.name() == "MacOS" then
             root_plugin=os.getenv("HOME") 
             root_plugin= root_plugin .. "/Library/Application Support/VapourSynth/vapoursynth.conf"
-            root_plugin=os.getenv("VAPOURSYNTH_CONF_PATH") or root_plugin
+            return os.getenv("VAPOURSYNTH_CONF_PATH") or root_plugin
         end
-        return root_plugin
 end
 
 -- Dumps vars to a config file so aegisub-vs.py script can retrieve them after
@@ -231,7 +236,7 @@ function write_vsvars_configfile()
 			    else --our failsafe replacement
                     pathspec=aegisub_decode_path("?"..v)
 			    end
-			-- Backlash need to be escaped to be json valid
+			-- Backslash need to be escaped to be json valid
 			pathspec=pathspec:gsub("\\","\\\\")
 			-- Save the config file in the ?user directory
 			if not first then
@@ -291,7 +296,7 @@ end
 -- autoupdated when Aegisub starts 
 write_vsvars_configfile()
 
--- if we are inside of aegisub, this is triggered as macro matching script_name value
+-- if we are inside of aegisub, this is triggered as macro which entry name matching script_name value
 if aegisub ~= nil then
     --Register macro (no validation function required)
     aegisub.register_macro(script_name,script_description,build_configfile)
