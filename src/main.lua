@@ -112,10 +112,14 @@ function aegisub_decode_path(spec)
    return path
 end
 
+
+
 --export key=value entry (UserPluginDir SystemPluginDir) of vapoursynth.conf 
 --as json entry in the vsvars config file
-function process_vapoursynth_conf_to_vsvars(file, root_pluging)
-  if file_exists(root_plugin)  then
+function process_vapoursynth_conf_to_vsvars(file, root_plugin)
+    local path = require("path")
+    print(root_plugin)
+    if file_exists(root_plugin)  then
         for line in io.lines(root_plugin) do
             local save=false
             local key, value
@@ -131,6 +135,20 @@ function process_vapoursynth_conf_to_vsvars(file, root_pluging)
                 end
             end
         end
+    else
+        --we will generate the dummy one of http://www.vapoursynth.com/doc/installation.html
+        local cfile = io.open(root_plugin, "w")
+        local userHome = path.user_home()
+        local UserPluginDir= userHome .. path.DIR_SEP .."vapoursynth".. path.DIR_SEP.."plugins"
+        local SystemPluginDir= "/special/non/default/location"
+        cfile:write("UserPluginDir = "..UserPluginDir)
+        write_vsvars_entry(file, "UserPluginDir", UserPluginDir)
+        cfile:write("\n")
+        file:write(",\n")
+        cfile:write("SystemPluginDir = "..SystemPluginDir)
+        write_vsvars_entry(file, "SystemPluginDir", SystemPluginDir)
+        print("Warning Dummy Vapoursynth failback")
+        cfile:close()
     end
 end
 
@@ -249,7 +267,7 @@ function write_vsvars_configfile()
         --======= retrieves vpoursynth plugin path  ==========
         root_plugin=locate_vapoursynth_conf()
         if root_plugin ~= nil then
-            process_vapoursynth_conf_to_vsvars(file, root_pluging)
+            process_vapoursynth_conf_to_vsvars(file, root_plugin)
         end
         
         file:write("\n}")
