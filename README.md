@@ -36,13 +36,15 @@ As indicated in [the Luarock wiki](https://github.com/luarocks/luarocks/wiki/Usi
 eval "$(luarocks path --bin)" && lua -l peagisub -e 'os.exit()'
 ```
 
+see the [run_luarocks_cmd wrapper](https://github.com/luarocks/luarocks/issues/1694) for python usage in the [doc](doc/Usage.md).
+
 ### Locally with direnv from the source package
 
 After cloning the repo and entering the project folder, load the project environment context with `direnv allow`, and install all dependencies.
 
 ```shell
 direnv allow  # Only needed once
-luarocks install --deps-only peagisub-1.0.0-1.rockspec
+luarocks install --deps-only peagisub-1.0.0-3.rockspec
 ```
 
 Now you can run any script from the project.
@@ -56,7 +58,7 @@ $ lua src/main.lua
 After cloning the repo and entering the project folder install all dependencies.
 
 ```shell
-luarocks install --deps-only peagisub-1.0.0-1.rockspec
+luarocks install --deps-only peagisub-1.0.0-3.rockspec
 ```
 
 When running any script from the project you also need to load the setup module.
