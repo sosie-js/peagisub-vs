@@ -1,9 +1,9 @@
 rockspec_format = "3.0"
 package = "peagisub"
-version = "1.0.0-3"
+version = "1.0.0-4"
 source = {
    url = "git+https://github.com/sosie-js/peagisub-vs",
-   tag = "v1.2.0"
+   tag = "v1.3.0"
 }
 description = {
    summary = "The lua helper to configure the aegisub-vapoursynth python bridge aegisub-vs.py",
@@ -27,10 +27,8 @@ dependencies = {
    "lua-path >= 0.3.1"
 }
 build = {
-   type = "builtin",
-   modules = {
-      peagisub = "src/main.lua"
-   },
+   type = "command",
+   build_command  = "./build-aux/luke lukefile install all",
    copy_directories = {
       "doc"
    }

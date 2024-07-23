@@ -1,0 +1,13 @@
+package  = 'peagisub'
+version  = '$USER'
+
+defines  = {
+   PACKAGE           = '"$package"',
+   VERSION           = '"$version"',
+   NDEBUG            = 1,
+   _FORTIFY_SOURCE   = 2,
+}
+
+modules  = {
+   ['peagisub']         = 'src/peagisub.lua',
+}

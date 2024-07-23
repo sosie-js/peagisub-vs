@@ -11,7 +11,7 @@ Exports all the vars path from aegisub to make it availaible under python
 script_name="Generate Aegisub config file"
 script_description="Exports paths specifiers to a config file to be used by python"
 script_author="SoSie-js / github"
-script_version="1.2"
+script_version="1.3"
 
 
 -- Detect os name
@@ -199,6 +199,7 @@ User plugins should never be put into the vs-coreplugins directory.
         ]]
         if os.name() == "Windows" then
            --TODO: fixe me I am lazy here because windows has karma
+           --os.environ['HOME'] = os.path.join(os .environ['HOMEDRIVE'],os.environ['HOMEPATH'])
            return nil
         end
         
