@@ -1,7 +1,7 @@
 # Usage
 
-This is lua helper is used to set the path needed by vapoursynth in arch1t3cht's aegisub fork
-It can be triggered may ways manually. 
+This is lua helper is used to set the path needed by vapoursynth in arch1t3cht's aegisub fork.
+It can be triggered many ways manually. 
 
 Some works, 
 
