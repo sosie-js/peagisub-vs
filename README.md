@@ -35,8 +35,8 @@ Run
   src/test.sh for unix
   src/test.bat for windows
 
-Note it will lock due to lua popen problem 
-See About [trigger a luarock's module from python](https://github.com/luarocks/luarocks/issues/1694)
+Note it will lock due to lua popen problem when triggered in the shell which does not happens in scite 
+there I draw [graphs usages in the doc](https://github.com/sosie-js/peagisub-vs/blob/1.3.0/doc/Usage.md) about it see my post [trigger a luarock's module from python](https://github.com/luarocks/luarocks/issues/1694)
 
 ## Requirements
 
