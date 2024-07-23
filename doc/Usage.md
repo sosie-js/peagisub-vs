@@ -29,7 +29,7 @@ shell --> R8[lua -l peagisub -e 'os.exit '] -- `/usr/local/share/lua/5.1/peagisu
 
 
 
-# Direct integration  
+# Direct integration in Aegisub  
 
 Modify the python bridge between aegisub and vapoursynth [aegisub-vs.py](https://raw.githubusercontent.com/arch1t3cht/Aegisub/vapoursynth/automation/vapoursynth/aegisub_vs.py) so that the ensure_plugin function can work after set_path being called.
 
