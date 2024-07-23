@@ -1,6 +1,37 @@
 # Usage
 
-This is a lua helper to set the path needed by the python bridge between aegisub and vapoursynth [aegisub-vs.py](https://raw.githubusercontent.com/arch1t3cht/Aegisub/vapoursynth/automation/vapoursynth/aegisub_vs.py) so that the ensure_plugin function can work after set_path being called.
+This is lua helper is used to set the path needed by vapoursynth in arch1t3cht's aegisub fork
+It can be triggered may ways manually. 
+
+Some works, 
+
+```mermaid
+graph LR
+
+DE((dir_env)) --> A[lua] --> S1[src/main.lua] --> F((OK))
+aegisub --> lua-jit--> S2[src/main.lua as ?user/automation/autoload/aegisub_vs.lua] --> F
+
+scite --> PT1[python3] --> test/test.py  --> G1((luarock_env)) --> R1[lua -l peagisub] -- `/usr/local/share/lua/5.1/peagisub.lua` --> F
+scite --> LU1[lua]  --> test/test.lua --> G2((luarock_env)) --> R2[lua -l peagisub] -- `/usr/local/share/lua/5.1/peagisub.lua` --> F
+```
+
+some don't.
+
+```mermaid
+graph LR
+
+shell --> test/test.sh --> LR3((luarock_env)) -->  R5[lua -l peagisub] -- `/usr/local/share/lua/5.1/peagisub.lua` --> LOOP!
+shell --> test/test.bat --> LR4((luarock_env)) --> R6[lua -l peagisub] -- `/usr/local/share/lua/5.1/peagisub.lua` --> LOOP!
+
+shell --> R7[lua -l peagisub] -- `/usr/local/share/lua/5.1/peagisub.lua`--> LOOP!
+shell --> R8[lua -l peagisub -e 'os.exit '] -- `/usr/local/share/lua/5.1/peagisub.lua` --> LOOP!
+```
+
+
+
+# Direct integration  
+
+Modify the python bridge between aegisub and vapoursynth [aegisub-vs.py](https://raw.githubusercontent.com/arch1t3cht/Aegisub/vapoursynth/automation/vapoursynth/aegisub_vs.py) so that the ensure_plugin function can work after set_path being called.
 
 ```python
 from dataclasses import dataclass, field
