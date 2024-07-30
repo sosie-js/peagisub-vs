@@ -1,0 +1,137 @@
+#!/usr/bin/env lua
+
+-----------------------------------------------------------------------------
+--  This is the wrapper to our lua library trigger it as a command
+--  
+--  Part of https://github.com/sosie-js/peagisub-vs
+--  Discussion on https://github.com/luarocks/luarocks/issues/1694
+--  (c) 2024 Sosie (sosie@sos-productions.com)
+--
+--  Version 1.4
+--
+--  License: MIT/X, 
+-----------------------------------------------------------------------------
+
+
+require("os")
+
+local home=os.getenv( "HOME" ) 
+
+
+-- Detect os to adjust api
+local BinaryFormat = package.cpath:match("%p[\\|/]?%p(%a+)")
+if BinaryFormat == "dll" then
+   --windows (not tested)
+   -- luarocks install --local winapi ADVAPI32_DIR=c:\windows\system32 ?
+   
+   stdlib=require("winapi")
+   
+    function execute(cmd)
+        result= stdlib.execute(cmd)
+        return result
+   end
+   
+elseif BinaryFormat == "so" or BinaryFormat == "dylib" then
+
+    -- Declares local path in case of lua-posix was installed as user in locall
+    local LUA_VERSION='5.1'
+    
+    --LUA_PATH
+    package.path = package.path .. ';' .. home .. "/.luarocks/share/lua/"..LUA_VERSION.."/?.lua".. ';' .. home .. "/.luarocks/share/lua/".. LUA_VERSION .."/?/init.lua" 
+    --LUA_CPATH
+    package.cpath = package.cpath .. ';' .. home .. "/.luarocks/lib/lua/"..LUA_VERSION .."/?."..BinaryFormat .. ';' .. home .. "/.luarocks/lib/lua/"..LUA_VERSION .."/?/init."..BinaryFormat 
+
+    
+  --[[ Install lua posix so stdlib.setenv is available
+   from sources (in /usr/local/lib/lua/5.1)
+      wget https://codeload.github.com/luaposix/luaposix/tar.gz/refs/tags/v36.2.1
+      tar xvzf v36.2.1
+      cd luaposix-36.2.1
+     
+      --./build-aux/luke lukefile install all
+        luarocks install --local luaposix-36.2.1-1.rockspec
+   or luarocks install --local luaposix 36.2.1 
+   or luarock install --local luaposix  (recommended) 
+   or from apt (33.4.0 has a buggy stdlib ) --> system wide
+      sudo apt install lua-posix
+]]
+
+    local ok, mymod = pcall(require, 'posix')
+    if not ok then
+      error("Module lua-posix is missing install it with apt get install lua-posix or sudo luarocks install luaposix")
+    end
+
+  posix=require("posix")
+  stdlib=posix.stdlib
+  
+  
+    --[[ this works in scite but blocks the shell
+  function execute_io(cmd)
+        local handle = io.popen(cmd)
+      
+         -- reads command output.
+        local output = handle:read('*a')
+        -- replaces any newline with a space
+        local result= output:gsub('[\n\r]', ' ')
+        handle:close()
+        return result
+  end
+  ]]
+   function popen_nonblock(cmd)
+       local lines = {}
+       local tmpfile = os.tmpname()
+       os.execute(cmd..' > '..tmpfile)
+       local f = io.open(tmpfile)
+       if not f then return lines end  
+       local k = 1
+       for line in f:lines() do
+          lines[k] = line
+          k = k + 1
+       end
+        f:close()
+        os.remove(tmpfile)
+        return lines
+     end
+   
+   function execute(cmd)
+        local lines =popen_nonblock(cmd)
+        local result=table.concat(lines,"\n")
+        return result
+    end
+   
+else
+   print("Unsupported OS")
+end
+
+
+--[[
+  Wrapper to run a lua command with luarocks env available
+  cmd : str  command to run 
+]]---
+function run_luarocks_cmd(cmd)
+
+    local cmd_rock_path='luarocks path --lr-path'
+    local LUA_PATH = assert(execute(cmd_rock_path))
+    
+    local setenv
+    if posix.stdlib == nil then
+        setenv=posix.setenv
+        --luaposix 33.4.0 installed with apt get install lua-posix or with sudo luarocks install luaposix 33.4.0
+        --print(posix.version.. " has no stdlib")
+    else
+        --luaposix >= 34.0.1-3
+        --sudo luarocks install luaposix 34.0.1
+        setenv=posix.stdlib.setenv
+        --print(posix.version.. " has stdlib")
+    end
+    
+    setenv("LUA_PATH", LUA_PATH)
+    assert( os.getenv("LUA_PATH") == LUA_PATH)
+    
+    return execute(cmd)
+end
+
+io.stdout:setvbuf("no")
+print(run_luarocks_cmd("lua -l peagisub -e 'os.exit()'"))
+io.stdout:flush()
+os.exit(0)
