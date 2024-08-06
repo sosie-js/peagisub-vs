@@ -5,133 +5,364 @@
 --  
 --  Part of https://github.com/sosie-js/peagisub-vs
 --  Discussion on https://github.com/luarocks/luarocks/issues/1694
---  (c) 2024 Sosie (sosie@sos-productions.com)
+--  (c) 2024 Sosie  / sos-productions.com)
+--  requires optparse from G.V.Vaughan
+--  uses luarocks powers from Hisham Muhammad 
 --
---  Version 1.4
+--  Version 1.5
 --
 --  License: MIT/X, 
 -----------------------------------------------------------------------------
 
+-- Aegisub script declaration style matching declaration in the builtin
+script_name="Generate Aegisub config file"
+script_description="Exports paths specifiers to a config file to be used by python"
+script_author="SoSie-js / github"
+script_version="1.5"
 
+--Command extension, provides more details
+script_command="peagisub"
+script_copyright=[[Copyright © 2024 sos-productions.com]]
+script_warranty= [[This program comes with ABSOLUTELY NO WARRANTY."]]
+script_footer=[[See documentation at <http://github.com/sosie-js/peagisub/>
+
+Please report bugs at <http://github.com/sosie-js/peagisub/issues>.]]
+
+------------------------------------------------------------------------------
 require("os")
 
-local home=os.getenv( "HOME" ) 
 
+---Execute a command and handle errors
+-- This add stderr support to io.popen, 
+-- i tried many but none worked
+--@param cmd string shell command
+--@return  output  
+--@return  err   where output is stdout and err is stderr message
+local function os_execute(cmd)
 
--- Detect os to adjust api
-local BinaryFormat = package.cpath:match("%p[\\|/]?%p(%a+)")
-if BinaryFormat == "dll" then
-   --windows (not tested)
-   -- luarocks install --local winapi ADVAPI32_DIR=c:\windows\system32 ?
-   
-   stdlib=require("winapi")
-   
-    function execute(cmd)
-        result= stdlib.execute(cmd)
-        return result
-   end
-   
-elseif BinaryFormat == "so" or BinaryFormat == "dylib" then
+    local _stdout, _stderr
+    local file_stdout=os.tmpname()
+    local file_stderr=os.tmpname()
 
-    -- Declares local path in case of lua-posix was installed as user in locall
-    local LUA_VERSION='5.1'
+    mask_stdout=true
+    mask_stderr=true
+
+    --io.stdout:setvbuf 'no' 
+    --io.stderr:setvbuf 'no'
+
+    local out=' > '..file_stdout
+    local err= ' 2> '..file_stderr
+
+    --local pipe =  io.popen(cmd.. out.. err)  
+    --local exe = tonumber(pipe:read())
+    --pipe:close()
     
-    --LUA_PATH
-    package.path = package.path .. ';' .. home .. "/.luarocks/share/lua/"..LUA_VERSION.."/?.lua".. ';' .. home .. "/.luarocks/share/lua/".. LUA_VERSION .."/?/init.lua" 
-    --LUA_CPATH
-    package.cpath = package.cpath .. ';' .. home .. "/.luarocks/lib/lua/"..LUA_VERSION .."/?."..BinaryFormat .. ';' .. home .. "/.luarocks/lib/lua/"..LUA_VERSION .."/?/init."..BinaryFormat 
-
+    os.execute(cmd.. out.. err)
     
-  --[[ Install lua posix so stdlib.setenv is available
-   from sources (in /usr/local/lib/lua/5.1)
-      wget https://codeload.github.com/luaposix/luaposix/tar.gz/refs/tags/v36.2.1
-      tar xvzf v36.2.1
-      cd luaposix-36.2.1
-     
-      --./build-aux/luke lukefile install all
-        luarocks install --local luaposix-36.2.1-1.rockspec
-   or luarocks install --local luaposix 36.2.1 
-   or luarock install --local luaposix  (recommended) 
-   or from apt (33.4.0 has a buggy stdlib ) --> system wide
-      sudo apt install lua-posix
-]]
-
-    local ok, mymod = pcall(require, 'posix')
-    if not ok then
-      error("Module lua-posix is missing install it with apt get install lua-posix or sudo luarocks install luaposix")
+    --io.stdout:flush()
+    --io.stderr:flush()
+    
+    _stdout,err=io.open(file_stdout,"r")
+    if not _stdout then 
+        os.remove(file_stdout)
+        os.remove(file_stderr)
+        return nil,"Could not open stdout: "..err
+    else
+        out=tostring(_stdout:read("*all"))
+        out= (out:gsub("\r\n", "\n"):gsub("\n$", "")) -- remove final newline
+        io.close(_stdout)
+        os.remove(file_stdout)
+    end
+  
+    _stderr,err=io.open(file_stderr,"r")
+    if not _stderr then 
+        os.remove(file_stderr)
+        return nil, "Could not open stderr: "..err
+    else
+        _stderr:flush()
+        err=tostring(_stderr:read("*all"))
+        err= (err:gsub("\r\n", "\n"):gsub("\n$", "")) -- remove final newline
+        io.close(_stderr)
+        os.remove(file_stderr)
     end
 
-  posix=require("posix")
-  stdlib=posix.stdlib
-  
-  
-    --[[ this works in scite but blocks the shell
-  function execute_io(cmd)
-        local handle = io.popen(cmd)
-      
-         -- reads command output.
-        local output = handle:read('*a')
-        -- replaces any newline with a space
-        local result= output:gsub('[\n\r]', ' ')
-        handle:close()
-        return result
-  end
-  ]]
-   function popen_nonblock(cmd)
-       local lines = {}
-       local tmpfile = os.tmpname()
-       os.execute(cmd..' > '..tmpfile)
-       local f = io.open(tmpfile)
-       if not f then return lines end  
-       local k = 1
-       for line in f:lines() do
-          lines[k] = line
-          k = k + 1
-       end
-        f:close()
-        os.remove(tmpfile)
-        return lines
-     end
-   
-   function execute(cmd)
-        local lines =popen_nonblock(cmd)
-        local result=table.concat(lines,"\n")
-        return result
-    end
-   
-else
-   print("Unsupported OS")
+    return out, err
+
 end
 
+
+
+--[[We could have used require "luarocks.loader"
+ but it is *NOT* recognized in aegisub/luajit at least
+     when luarock is installed as user so we have 
+     to built our own loader by hand using monkey patching technique]]
+-- @return nothing
+local luarocks_loader=function() 
+
+    local ok, mymod = pcall(require, "luarocks.loader")
+    
+    -- Debug helpers
+    
+    --dump locals
+    --for x, v in pairs(locals()) do print(x, v) end
+    function locals()
+      local variables = {}
+      local idx = 1
+      while true do
+        local ln, lv = debug.getlocal(2, idx)
+        if ln ~= nil then
+          variables[ln] = lv
+        else
+          break
+        end
+        idx = 1 + idx
+      end
+      return variables
+    end
+
+    --dump globals
+    --for x, v in pairs(globals()) do print(x, v) end
+    --for x, v in pairs(getfenv()) do print(x, v) end
+    function globals()
+        return _G
+    end
+    
+     function dump(someuserdata)
+        local report=getmetatable(someuserdata)
+        if report  ~=nil then
+            print(inspect(report))
+        else
+            print(tostring(report))
+        end
+    end
+    
+    local executable=function(cmd)
+      --[[local bindir = debug.getinfo(2, "S").source:sub(2):gsub("peagisub","")
+       local f=io.open(bindir..cmd,"r")
+       if f~=nil then io.close(f) return true else return false end]]
+       out, err= os_execute('type '..cmd)
+       return not string.find(err,"not found") 
+    end
+    
+    if(not ok and not executable('luarocks') and aegisub == nil) then
+        error("Module luarock is missing install it with the install.sh script")
+    end
+
+    --LUA_LIBEXT = package.cpath:match("%p[\\|/]?%p(%a+)$")
+    LUA_LIBEXT = package.cpath:match("\.(%a+)$")
+    --local 
+    IS_LINUX= false
+    IS_MACOSX = false
+    if LUA_LIBEXT== "dll" then
+        -- IS_WINDOWS is set later by require "lua-path"
+        -- luarocks working direcory
+        LUAROCKS_BASE = os.getenv( "APPDATA" ) ..   "\\luarocks" --not sure
+    elseif LUA_LIBEXT == "so" then
+        IS_LINUX=true
+        LUAROCKS_BASE = os.getenv( "HOME" )  .. "/.luarocks"
+    elseif LUA_LIBEXT == "dylib" then
+        IS_MACOSX=true
+        LUAROCKS_BASE = os.getenv( "HOME" )  .. "/.luarocks" --not sure
+    else
+        --for x, v in pairs(globals()) do print(x, v) end
+        error("luarocks_loader error: unsupported LUA_LIBEXT '"..LUA_LIBEXT.."' read from package.cpath '".. package.cpath.."'")
+    end
+
+    -- Declares local path in case of lua-path was installed as user in local
+    LUA_VERSION=tostring(_VERSION:gsub("Lua ", ""))
+    
+
+    
+    function script_path()
+       local str = debug.getinfo(2, "S").source:sub(2)
+       return str -- str:match("(.*[/\\])")
+    end
+    
+    --Lightweight version cfg.init_package_paths()
+    --of https://github.com/luarocks/luarocks/blob/master/src/luarocks/core/cfg.lua
+    --limited to the user tree where all is installed in local
+    if not ok then  
+        --LUA_PATH
+        package.path = package.path .. ';' .. LUAROCKS_BASE .. "/share/lua/" .. LUA_VERSION.."/?.lua".. ';' .. LUAROCKS_BASE .. "/share/lua/".. LUA_VERSION .."/?/init.lua" 
+        --LUA_CPATH
+        package.cpath = package.cpath .. ';' .. LUAROCKS_BASE.. "/lib/lua/"..LUA_VERSION .."/?."..LUA_LIBEXT .. ';' .. LUAROCKS_BASE .. "/lib/lua/"..LUA_VERSION .."/?/init."..LUA_LIBEXT
+    else
+        --print(package.path)
+        --print(package.cpath)
+    end
+end
+
+luarocks_loader()
+
+--Now we are in luarocks world, we can load dependencies
+
+local ok, peagisub = pcall(require, 'peagisub')
+if not ok then
+  error("Module peagisub is missing install it with\n  luarocks install --local peagisub")
+end
 
 --[[
-  Wrapper to run a lua command with luarocks env available
-  cmd : str  command to run 
-]]---
-function run_luarocks_cmd(cmd)
+local options={
+    vsvars={
+        userplugin="retrieve the userplugin path from vsvar config file",
+        systemplugin="retrieve the systemplugin path from vsvars config file",
+        cache="retrieve the cache path where lwi index are saved",
+        luadir="retrieve the automation lua dir whre aegisub-vs.lua is stored",
+        vsdir="retrieve the vapoursynth dir where aegisub-vs.py is stored"
+    },
+    vscmds={
+        createconfigfile="creates the vsvars config file that stores all the useful paths to set up vapoursynth on python side.",
+        fixconfigfile="Fix vsvars.json configfile and vapoursynth.conf it depends on"
+    }
+}]]
+local options=peagisub.options
 
-    local cmd_rock_path='luarocks path --lr-path'
-    local LUA_PATH = assert(execute(cmd_rock_path))
-    
-    local setenv
-    if posix.stdlib == nil then
-        setenv=posix.setenv
-        --luaposix 33.4.0 installed with apt get install lua-posix or with sudo luarocks install luaposix 33.4.0
-        --print(posix.version.. " has no stdlib")
-    else
-        --luaposix >= 34.0.1-3
-        --sudo luarocks install luaposix 34.0.1
-        setenv=posix.stdlib.setenv
-        --print(posix.version.. " has stdlib")
-    end
-    
-    setenv("LUA_PATH", LUA_PATH)
-    assert( os.getenv("LUA_PATH") == LUA_PATH)
-    
-    return execute(cmd)
+
+local ok, OptionParser = pcall(require, 'optparse')
+if not ok then
+  error("Module optparse is missing install it with\n  luarocks install --local optparse")
 end
 
+
+local help = [[
+]]..script_command..[[ ]]..script_version..[[
+
+]]..script_copyright..[[
+]]..script_warranty..[[
+
+Usage: ]]..script_command..[[ [<options>]
+
+]]..script_name ..[[
+
+]]..script_description..[[
+
+Options:
+
+  -h, --help               display this help, then exit
+  --version            display version information, then exit]]
+  
+ 
+local configs={"config-path";"config-cpath"}
+  
+--- Get the config param
+-- @param name of the variable
+-- @return string content
+function config(name) 
+    --This may not be sufficient, because if luarocks is not 
+    -- installed in the same tree, this last that all depend on ,
+    -- will not be reachable
+    if name =="config-path" then
+        return package.path
+    end
+    
+    if name =="config-cpath" then
+        return package.cpath
+    end
+    
+    return "'"..name:gsub(0,15).."' is not defined in config "
+end
+  
+function  add_option(options, type, name, desc)
+    if options[type] == nil then
+        options[type]={}
+    end
+    options[type][name]=desc
+    return options
+end
+
+--mandatory
+options=add_option(options, "config", "config-path", "retrieve package.path installed by the wrap_script")
+options=add_option(options, "config", "config-cpath", "retrieve package.cpath installed by the wrap_script")
+
+if(#options.vsvars) then
+    help = help..[[
+
+
+ vars : ]]
+end
+ 
+for k,v in pairs(options.vsvars) do
+    help = help..[[
+
+  --]]..k..[[       ]]..v
+end
+
+
+--- Get the content of a variable from the config file (vsvars.conf) 
+-- @param name of the variable
+-- @return string content
+function vsvar(name)
+    --[[cmd='print(peagisub.vsvar("'..name..'")); os.exit()'
+    cmd="lua -lluarocks.loader -lpeagisub -e '"..cmd.."'"
+    --cmd="lua -lluarocks.loader -lpeagisub -e 'os.exit()'"
+    local out, err= os_execute(cmd)
+    if(err~="") then
+        error("Error vsvar'"..tostring(err).."'")
+    end}}
+    return out]]
+    return   peagisub.vsvar(name)
+end
+
+if(#options.vscmds) then
+help = help..[[
+
+
+ commands : ]]
+end
+
+ for k,v in pairs(options.vscmds) do
+    help = help..[[
+
+  --]]..k..[[       ]]..v
+end
+
+help = help..[[
+
+  --                       end of options
+
+]]..script_footer
+
+local parser = OptionParser (help)
+for k,v in pairs(options.config) do
+    parser:on('--'..k, parser.optional, parser.boolean)
+end
+for k,v in pairs(options.vsvars) do
+    parser:on('--'..k, parser.optional, parser.boolean)
+end
+for k,v in pairs(options.vscmds) do
+    parser:on('--'..k, parser.optional, parser.boolean)
+end
+
+-- Executes a given command
+-- @param cmd a command such as 'createconfigfile' or 'fixconfigfile'
+-- @return output of the command
+function vscmd(cmd)
+    --[[cmd='print(peagisub.vscmd("'..cmd..'")); os.exit()'
+    cmd="lua -lluarocks.loader -lpeagisub -e '"..cmd.."'"
+    local out, err= os_execute(cmd)
+    if(err~="") then
+        error("Error vscmd'"..tostring(err).."'")
+    end
+    return out]]
+    return   peagisub.vscmd(cmd)
+end
+
+--Handle now provided args if given, else do nothing
+--if _G.arg ~= nil then
+local arg, opts = parser:parse (_G.arg)
 io.stdout:setvbuf("no")
-print(run_luarocks_cmd("lua -l peagisub -e 'os.exit()'"))
+for x, v in pairs(opts) do  
+    --print("'"..x.."'",v)
+    if configs[x] ~= nil and v == true then
+         print(config(x))
+    end
+    if options.vsvars[x] ~= nil and v == true then
+         print(vsvar(x))
+    end
+    if options.vscmds[x] ~= nil and v == true then
+         print(vscmd(x))
+    end
+end
 io.stdout:flush()
-os.exit(0)
+
+
