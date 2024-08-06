@@ -1,0 +1,1 @@
+ldoc -c config.ld src/peagisub.lua
