@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Wrapper luke-luarocks                                                                                     
+# Big thanks to Gary Vaughan for this                                                                       
+# see https://github.com/gvvaughan/luke/pull/6                                                              
+
+
+case $1 in
+    --local) shift; index=1 ;;
+    --global) shift; index=2 ;;
+esac
+
+test -z "$index" || {
+    prefix=$(lua -e "$(luarocks config)" -e "for k, v in next,rocks_trees do if k == $index then print(v) end end")
+    set -- PREFIX=${PREFIX-"$prefix"} ${1+"$@"}
+}
+
+exec build-aux/luke ${1+"$@"}

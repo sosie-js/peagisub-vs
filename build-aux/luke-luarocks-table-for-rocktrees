@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Wrapper luke-luarocks                                                                                     
+# Big thanks to Gary Vaughan for this                                                                       
+# see https://github.com/gvvaughan/luke/pull/6                                                              
+
+
+case $1 in
+    --local) shift; name=user ;;
+    --global) shift; name=system ;;
+esac
+
+test -z "$name" || {
+    prefix=$(lua -e "$(luarocks config)" -e "for k, v in next,rocks_trees do if v.name == '$name' then print(v.root) end end")
+    set -- PREFIX=${PREFIX-"$prefix"} ${1+"$@"}
+}
+
+exec build-aux/luke ${1+"$@"}
