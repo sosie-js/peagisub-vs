@@ -1,0 +1,635 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>peagisub</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>peagisub</code></h1>
+<p>Exports Aegisub vars to a config file to be used by vapoursynth with python</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#serialize">serialize (me, tab, depth)</a></td>
+	<td class="summary">Serializes a table as a string
+ reproduce python pprint.pprint</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#locals">locals ()</a></td>
+	<td class="summary">Returns locals as table
+print(serialize(locals()))</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#script_path">script_path (dironly)</a></td>
+	<td class="summary">Returns the current script path per default</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#aegisub_decode_path">aegisub_decode_path (spec)</a></td>
+	<td class="summary">Minimal aegisub.decode_path  replacement when aegisub is closed or not availaible
+ can not fully decode full pathnames only one isolated specifier at a time</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#vsvarsfile">vsvarsfile ()</a></td>
+	<td class="summary">Get the path of the vsvars config file (vsvars.json)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dialog_ok">dialog_ok (msg)</a></td>
+	<td class="summary">Popup OK dialog box in aegisub with the given message
+  The user has no choice other than cliking on the OK button to close</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dialog_yesno">dialog_yesno (msg)</a></td>
+	<td class="summary">Popup YES - NO dialog box in aegisub with the given message
+  The user has no choice to answer than cliking on the NO or YES button t</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dialog_debug">dialog_debug (msg)</a></td>
+	<td class="summary">Popup DEBUG dialog box in aegisub with the given message
+  The user has no choice to click OK after seing the message in a textarea</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dialog_info">dialog_info (msg)</a></td>
+	<td class="summary">Popup INFO dialog box in aegisub with the given message
+  The user has no choice to click OK after seing the message in a textarea</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dialog_error">dialog_error (msg)</a></td>
+	<td class="summary">Popup ERROR dialog box in aegisub with the given message
+  The user has no choice to click OK after seing the message in a textarea</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_get_vapoursynth_user_plugin">_get_vapoursynth_user_plugin ()</a></td>
+	<td class="summary">Guess vapoursynth userplugin directory
+LUA port of
+  def _get_vapoursynth_user_plugin(self):
+        #we dont use ?data/vapoursynth, because cannot be easily located of vspreview
+        #as the Appimage change on every fuse, mount and content cannot be patched
+        return str(Path.joinpath(Path(self.userdir),"vapoursynth"))</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_get_vapoursynth_system_plugin">_get_vapoursynth_system_plugin ()</a></td>
+	<td class="summary">Guess vapoursynth systemplugin directory
+ LUA Port of:
+  def _get_vapoursynth_system_plugin():
+        import vapoursynth
+        vapoursynth_lib= Path.joinpath(Path(vapoursynth.__file__).parent,"vapoursynth."+Vsvars.ext)
+        symlink= os.readlink(vapoursynth_lib)
+        if "dist-packages" in symlink:
+            #/usr/local/lib/pythonX.Y/dist-packages/vapoursynth.cython*.so -> /usr/local/vapoursynth
+            return str(Path.joinpath(Path(symlink).parent.parent.parent.parent,"vapoursynth"))
+        else:
+            return "?"</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#write_vsvars_entry">write_vsvars_entry (file, key, value)</a></td>
+	<td class="summary">Writes a entry in the given file
+  An entry consists of a line "key" : "value"
+  note file:write(",\n") should normally be done before</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#process_vapoursynth_conf_to_vsvars">process_vapoursynth_conf_to_vsvars (vsvars, vsconf_file, fix)</a></td>
+	<td class="summary">Build the vsvars.json config file
+ It glues aegisub paths with vapoursynth ones from vapoursynth.conf
+ export key=value entry (UserPluginDir SystemPluginDir) of vapoursynth.conf
+ as json entry in the vsvars config file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#locate_vapoursynth_conf">locate_vapoursynth_conf ()</a></td>
+	<td class="summary">Determines where vapoursynth.conf resides</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#write_vsvars_configfile">write_vsvars_configfile (fix)</a></td>
+	<td class="summary">Dumps vars to a config file so aegisub-vs.py script can retrieve them after</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#build_configfile">build_configfile ()</a></td>
+	<td class="summary">Gui for aegisub to build both vsvars.json and if agreed vapoursynth.conf</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#vsvar">vsvar (name)</a></td>
+	<td class="summary">Get the content of a variable from the config file (vsvars.conf)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "serialize"></a>
+    <strong>serialize (me, tab, depth)</strong>
+    </dt>
+    <dd>
+    Serializes a table as a string
+ reproduce python pprint.pprint
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">me</span>
+         a table object
+        </li>
+        <li><span class="parameter">tab</span>
+         starting tabulation
+        </li>
+        <li><span class="parameter">depth</span>
+         interger max depth, 5 levels per default
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string the string representation of the table
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "locals"></a>
+    <strong>locals ()</strong>
+    </dt>
+    <dd>
+    Returns locals as table
+print(serialize(locals()))
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "script_path"></a>
+    <strong>script_path (dironly)</strong>
+    </dt>
+    <dd>
+    Returns the current script path per default
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dironly</span>
+         a boolean if set to true return the directory of the current script
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string the string pathname of directory path
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "aegisub_decode_path"></a>
+    <strong>aegisub_decode_path (spec)</strong>
+    </dt>
+    <dd>
+    Minimal aegisub.decode_path  replacement when aegisub is closed or not availaible
+ can not fully decode full pathnames only one isolated specifier at a time
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         a sing specifier one of ?user,?data,?temp, ?local or ?cacher other are not supported
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        path
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "vsvarsfile"></a>
+    <strong>vsvarsfile ()</strong>
+    </dt>
+    <dd>
+    Get the path of the vsvars config file (vsvars.json)
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        path
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dialog_ok"></a>
+    <strong>dialog_ok (msg)</strong>
+    </dt>
+    <dd>
+    Popup OK dialog box in aegisub with the given message
+  The user has no choice other than cliking on the OK button to close
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         text message for the dialog box, an information given to the user
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        nothing
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dialog_yesno"></a>
+    <strong>dialog_yesno (msg)</strong>
+    </dt>
+    <dd>
+    Popup YES - NO dialog box in aegisub with the given message
+  The user has no choice to answer than cliking on the NO or YES button t
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         text message for the dialog box, a question in this case
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        choice string matching the button clicked 'YES' or 'NO'
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dialog_debug"></a>
+    <strong>dialog_debug (msg)</strong>
+    </dt>
+    <dd>
+    Popup DEBUG dialog box in aegisub with the given message
+  The user has no choice to click OK after seing the message in a textarea
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         text message for the textarea
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        nothing
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dialog_info"></a>
+    <strong>dialog_info (msg)</strong>
+    </dt>
+    <dd>
+    Popup INFO dialog box in aegisub with the given message
+  The user has no choice to click OK after seing the message in a textarea
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         text message for the textarea
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        nothing
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dialog_error"></a>
+    <strong>dialog_error (msg)</strong>
+    </dt>
+    <dd>
+    Popup ERROR dialog box in aegisub with the given message
+  The user has no choice to click OK after seing the message in a textarea
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+         text message for the textarea
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        nothing
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_get_vapoursynth_user_plugin"></a>
+    <strong>_get_vapoursynth_user_plugin ()</strong>
+    </dt>
+    <dd>
+    Guess vapoursynth userplugin directory
+LUA port of
+  def _get_vapoursynth_user_plugin(self):
+        #we dont use ?data/vapoursynth, because cannot be easily located of vspreview
+        #as the Appimage change on every fuse, mount and content cannot be patched
+        return str(Path.joinpath(Path(self.userdir),"vapoursynth"))
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        dir the directory
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_get_vapoursynth_system_plugin"></a>
+    <strong>_get_vapoursynth_system_plugin ()</strong>
+    </dt>
+    <dd>
+    Guess vapoursynth systemplugin directory
+ LUA Port of:
+  def _get_vapoursynth_system_plugin():
+        import vapoursynth
+        vapoursynth_lib= Path.joinpath(Path(vapoursynth.__file__).parent,"vapoursynth."+Vsvars.ext)
+        symlink= os.readlink(vapoursynth_lib)
+        if "dist-packages" in symlink:
+            #/usr/local/lib/pythonX.Y/dist-packages/vapoursynth.cython*.so -> /usr/local/vapoursynth
+            return str(Path.joinpath(Path(symlink).parent.parent.parent.parent,"vapoursynth"))
+        else:
+            return "?"
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        dir the directory
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "write_vsvars_entry"></a>
+    <strong>write_vsvars_entry (file, key, value)</strong>
+    </dt>
+    <dd>
+    Writes a entry in the given file
+  An entry consists of a line "key" : "value"
+  note file:write(",\n") should normally be done before
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file</span>
+         file stream
+        </li>
+        <li><span class="parameter">key</span>
+         string
+        </li>
+        <li><span class="parameter">value</span>
+         string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        nothing
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "process_vapoursynth_conf_to_vsvars"></a>
+    <strong>process_vapoursynth_conf_to_vsvars (vsvars, vsconf_file, fix)</strong>
+    </dt>
+    <dd>
+    Build the vsvars.json config file
+ It glues aegisub paths with vapoursynth ones from vapoursynth.conf
+ export key=value entry (UserPluginDir SystemPluginDir) of vapoursynth.conf
+ as json entry in the vsvars config file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vsvars</span>
+         file stream to the vsvars.json file
+        </li>
+        <li><span class="parameter">vsconf_file</span>
+         string / pathname to vapoursynth.conf file
+        </li>
+        <li><span class="parameter">fix</span>
+         boolean indicating if vapoursynth.conf should be created or fixed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        fix boolean the final choice after user has been asked for agreement
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "locate_vapoursynth_conf"></a>
+    <strong>locate_vapoursynth_conf ()</strong>
+    </dt>
+    <dd>
+    Determines where vapoursynth.conf resides
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        path to the vapoursynth.conf
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "write_vsvars_configfile"></a>
+    <strong>write_vsvars_configfile (fix)</strong>
+    </dt>
+    <dd>
+    Dumps vars to a config file so aegisub-vs.py script can retrieve them after
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fix</span>
+         boolan if true create/fix vapoursynth.conf whose params belongs to vsvars
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        filename path to the vsvars.conf</li>
+        <li>
+        boolean fix the final choixe of the user</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "build_configfile"></a>
+    <strong>build_configfile ()</strong>
+    </dt>
+    <dd>
+    Gui for aegisub to build both vsvars.json and if agreed vapoursynth.conf
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        nothing
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "vsvar"></a>
+    <strong>vsvar (name)</strong>
+    </dt>
+    <dd>
+    Get the content of a variable from the config file (vsvars.conf)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         of the variable
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string content
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2024-08-06 22:31:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
