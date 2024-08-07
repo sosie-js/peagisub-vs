@@ -20,7 +20,7 @@ import shlex
 """
 def run_peagisub(cmd:str):
     try:
-        result=subprocess.run(shlex.split('peagisub2 '+cmd), capture_output=True)
+        result=subprocess.run(shlex.split('peagisub '+cmd), capture_output=True)
     except OSError as e:
         if e.errno == 2:
             raise OSError("Peagisub command is required , please install with luarocks. You can use install scripts provided by the peagisub package or simply use luarocks install --local peagisub-vs 1.0.5")
