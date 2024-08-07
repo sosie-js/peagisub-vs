@@ -174,6 +174,7 @@ peagisub --systemplugin ->> peagisub.lua: lua -lluarocks.loader -lpeagisub -e 'p
 peagisub.lua ->> vsvar.json: read config file 
 vsvar.json ->> peagisub.lua: extract var 'luadir'
  peagisub.lua ->> peagisub --systemplugin: vsvar('luadir')
+ ```
 
 ### Using peagisub.lua builtin
 
