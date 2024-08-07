@@ -1,7 +1,7 @@
 
 
 
-![peagisub banner](https://github.com/sosie-js/peagisub-vs/blob/1.4.0/peagisub.png#)
+![peagisub banner](https://github.com/sosie-js/peagisub-vs/blob/1.5.0/peagisub.png#)
 ## News
 
 Prior version 1.5, code was still experimental due to a lack of knowledge in luarock integration. Thanks to advices and answers to my questions from [luke](https://github.com/gvvaughan/luke/pull/6) and [luarocks](https://github.com/luarocks/luarocks/discussions/1698) authors  - big thanks to them -  and tenacity, I finally converged to the pattern of a command [peagisub](src/peagisub) calling a builtin [peagisub.lua](src/peagisub.lua) 
@@ -61,7 +61,7 @@ IMPORTANT NOTE: The script does not move your  vapoursynth plugin files , you wi
 ### Shell 
 
 You can have the available commands with  `peagisub --help`
-I also draw [graphs usage](https://github.com/sosie-js/peagisub-vs/blob/1.3.0/doc/Usage.md) showing communication between the command and the builtin module. 
+I also draw [graphs usage](https://github.com/sosie-js/peagisub-vs/blob/1.5.0/doc/Usage.md) showing communication between the command and the builtin module. 
 
 ### Scite
 
@@ -72,7 +72,7 @@ you should have a vapoursynth.conf path content in your output pane meaning it w
 
 To understand and fix or add new features, I have made an overview
 
-![peagisub overview](https://github.com/sosie-js/peagisub-vs/blob/1.4.0/doc/Overview.png#)
+![peagisub overview](https://github.com/sosie-js/peagisub-vs/blob/1.5.0/doc/Overview.png#)
 
 -test/peagisub_dev.lua:  is a symlik from src/peagiusb so [scite](https://scintilla.org/SciTE.html) recognizes it as lua script so easier to modify and fix
 -test/peagisub_testfail.lua: shows the limitation of luarocks loader
