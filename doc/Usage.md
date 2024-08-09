@@ -10,10 +10,10 @@ Modify the python bridge between aegisub and vapoursynth [aegisub-vs.py](https:/
  """
 File name: aegisub-vs.py
 Author: sosie-js / github 
-Created: 07.08.2024
-Version: 1.5
+Created: 09.08.2024
+Version: 1.6
 Description: Bridge to vapoursynth using lua config helper 
-peagisub (luarocks install --local peagisub-vs 1.5.0)
+peagisub (luarocks install --local peagisub-vs 1.6.0)
 """
 
 from dataclasses import dataclass, field
