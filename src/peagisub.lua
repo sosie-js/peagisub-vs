@@ -2,19 +2,24 @@
 peagisub.lua aka aegisub-vs.lua for aegisub
  Copyright (C) 2024 SoSie-js / sos-productions.com
 ]]
---- Exports Aegisub vars to a config file to be used by vapoursynth with python
+--- Export Aegisub vars to a config file to be used by vapoursynth with python
 -- @module peagisub
 
 --Script properties
 script_name="Generate Aegisub config file"
 script_description="Exports paths specifiers to a config file to be used by python"
 script_author="SoSie-js / github"
-script_version="1.5"
+script_version="1.6"
 
 -- ============== Debug stuff ==================
 
 --Dump into dump.txt in the same directory of this script for debug purposes
 dump=false
+
+if aegisub ==nil then
+    --use our private mock with scite
+    require "aegisub"
+end
 
 --- Serializes a table as a string
 -- reproduce python pprint.pprint
@@ -96,14 +101,17 @@ end
 if(dump) then
     
     dump = {}
-    dump.file=io.open(script_path(true)..'dump.txt', "w")
+    dump.file=io.open(script_path(true)..'dump.txt', "a")
     dump.write=function (msg)
+        if dump.file== nil then
+             dump.file=io.open(script_path(true)..'dump.txt', "a")
+        end
         dump.file:write(msg)
     end
     dump.close=function ()
          dump.file:close()
     end
-    dump.write("\nscript_dir="..script_path(true))
+    --dump.write("\nscript_dir="..script_path(true))
     
 else
     dump={}
@@ -325,13 +333,13 @@ local luarocks_loader=function()
     end
     
     if dump then
-        dump.write("=== STARTING DUMP ===")
+        dump.write("\n=== STARTING DUMP ===")
         dump.write("\nscript_path="..script_path(false))
         dump.write("\nscript_dir="..script_path(true))
         dump.write("\n===============\n")
         dump.write("package.path="..package.path)
         dump.write("\npackage.cpath="..package.cpath)
-        dump.write(serialize(globals()))
+        --dump.write(serialize(globals()))
     end
     
     --Now this should work and _G("luarocks") available
@@ -341,7 +349,7 @@ end
 
 local LUAROCKS_LOADED=luarocks_loader()
 
--- Dialog 
+-- Dialogs 
 
   --- Popup OK dialog box in aegisub with the given message
     --  The user has no choice other than cliking on the OK button to close
@@ -501,6 +509,7 @@ if(LUAROCKS_LOADED) then
     function _get_vapoursynth_system_plugin()
 
         local PYTHON_VERSION, err
+        --Retrieve version of python 3.\d+
         local cmd="python3 -c 'import sys; v=sys.version_info[:2]; print(str(v[0])+chr(46)+str(v[1]));'"
         PYTHON_VERSION, err= os_execute(cmd)
         if string.find(err,"not found") then
@@ -514,7 +523,8 @@ if(LUAROCKS_LOADED) then
           if string.find(err,"ModuleNotFoundError") then
              dialog_error("Vapoursynth seems not to be installed: sudo pip3 install vapoursynth")
           else
-
+            
+            --Resolves the link, extract the dirname
             cmd='dirname `ls -l '..vapoursynth_lib ..' | cut -d" " -f12`'
             result, err= os_execute(cmd)
             
@@ -550,7 +560,78 @@ if(LUAROCKS_LOADED) then
     -- @param value string
     -- @return nothing
     function  write_vsvars_entry(file, key, value)
+        if (dump) then
+            dump.write("\n[CONFIG] Write new entry '"..key.."' with value '"..value.."'")
+        end
         file:write('  "'..key..'" : "'..value..'"')
+    end
+    
+    --- Read the current vapoursynth config file 
+    -- it will generate the vsvars conf entries UserPluginDir and SystemPluginDir
+    -- @param vsvars file stream to the vsvars.json file
+    -- @param vsconf_file string / pathname to vapoursynth.conf file
+    function read_vapoursynth_conf(vsvars, vsconf_file)
+    
+        for line in io.lines(vsconf_file) do
+            local save=false
+            local key, value
+            for i in string.gmatch(line, "[^=%s]+") do
+               if not save then
+                    key= i
+                    save = true
+                else
+                    value= i
+                    vsvars:write(",\n")
+                    write_vsvars_entry(vsvars, key, value)
+                    save = false
+                end
+            end
+        end
+    end
+    
+    --- generate the dummy vapoursynth config file
+    -- we will generate the dummy one of http://www.vapoursynth.com/doc/installation.html
+    --  it will generate the vsvars conf entries UserPluginDir and SystemPluginDir
+    -- @param vsvars file stream to the vsvars.json file
+    -- @param vsconf_file string / pathname to vapoursynth.conf file
+    function create_dummy_vapoursynth_conf(vsvars, vsconf_file)
+    
+        local cfile,  userHome, UserPluginDir, SystemPluginDir
+     
+        cfile = io.open(vsconf_file, "w")
+        userHome = PATH:user_home()
+        UserPluginDir= userHome .. path.DIR_SEP .."vapoursynth".. path.DIR_SEP.."plugins"
+        SystemPluginDir= "/special/non/default/location"
+        cfile:write("UserPluginDir = "..UserPluginDir)
+        write_vsvars_entry(vsvars, "UserPluginDir", UserPluginDir)
+        cfile:write("\n")
+        vsvars:write(",\n")
+        cfile:write("SystemPluginDir = "..SystemPluginDir)
+        write_vsvars_entry(vsvars, "SystemPluginDir", SystemPluginDir)
+        dialog_ok("Warning Dummy vapoursynth.conf generated, \nplease fix it using '"..script_name.."' script from automation menu")
+        cfile:close()
+    end
+    
+    --- Fix or Create vapoursynth config file
+    -- uses _get_vapoursynth_user_plugin() and _get_vapoursynth_system_plugin()
+    --  it will generate the vsvars conf entries UserPluginDir and SystemPluginDir
+    -- @param vsvars file stream to the vsvars.json file
+    -- @param vsconf_file string / pathname to vapoursynth.conf file
+    function update_vapoursynth_conf(vsvars, vsconf_file)
+    
+        local cfile,  userHome, UserPluginDir, SystemPluginDir
+        
+        cfile = io.open(vsconf_file, "w")
+        UserPluginDir=  _get_vapoursynth_user_plugin()
+        SystemPluginDir= _get_vapoursynth_system_plugin()
+        cfile:write("UserPluginDir = "..UserPluginDir)
+        write_vsvars_entry(vsvars, "UserPluginDir", UserPluginDir)
+        cfile:write("\n")
+        vsvars:write(",\n")
+        cfile:write("SystemPluginDir = "..SystemPluginDir)
+        write_vsvars_entry(vsvars, "SystemPluginDir", SystemPluginDir)
+        cfile:close()
+    
     end
     
     ---Build the vsvars.json config file
@@ -564,44 +645,30 @@ if(LUAROCKS_LOADED) then
     function process_vapoursynth_conf_to_vsvars(vsvars, vsconf_file, fix)
         
         --print(vsconf_file)
+  
         if PATH:exists(vsconf_file) and not fix  then
-            for line in io.lines(vsconf_file) do
-                local save=false
-                local key, value
-                for i in string.gmatch(line, "[^=%s]+") do
-                   if not save then
-                        key= i
-                        save = true
-                    else
-                        value= i
-                        vsvars:write(",\n")
-                        write_vsvars_entry(vsvars, key, value, fix)
-                        save = false
-                    end
-                end
+        
+            if (dump) then
+                dump.write("\n[INFO] Read "..vsconf_file)
             end
+        
+            read_vapoursynth_conf(vsvars, vsconf_file)
+          
         else
-            local cfile,  userHome, UserPluginDir, SystemPluginDir
+           
             if not fix then
-               --we will generate the dummy one of http://www.vapoursynth.com/doc/installation.html
-                cfile = io.open(vsconf_file, "w")
-                userHome = PATH:user_home()
-                UserPluginDir= userHome .. path.DIR_SEP .."vapoursynth".. path.DIR_SEP.."plugins"
-                SystemPluginDir= "/special/non/default/location"
-                cfile:write("UserPluginDir = "..UserPluginDir)
-                write_vsvars_entry(vsvars, "UserPluginDir", UserPluginDir)
-                cfile:write("\n")
-                vsvars:write(",\n")
-                cfile:write("SystemPluginDir = "..SystemPluginDir)
-                write_vsvars_entry(vsvars, "SystemPluginDir", SystemPluginDir)
-                dialog_ok("Warning Dummy vapoursynth.conf generated, \nplease fix it using '"..script_name.."' script from automation menu")
-                cfile:close()
+            
+                if (dump) then
+                    dump.write("\n[INFO]  generate the dummy one of http://www.vapoursynth.com/doc/installation.html")
+                end
+            
+                create_dummy_vapoursynth_conf((vsvars, vsconf_file)
+         
             else
                 --[[Harmonize vapoursynth.conf with paths reachable in aegisub's world.
                 This is imho the best combination  to do to have a gui and an auto configuration system at the same time. 
                 When path are set up correctly, both aegisub and eternal viewers such as vspreview or vapoursynth-editors are usable.
                 This makes vapoursynth scripting with subtitles automation much much easier.      ]]    
-                
                 local action
                 if PATH:exists(vsconf_file) then
                     action="Fix"
@@ -609,22 +676,24 @@ if(LUAROCKS_LOADED) then
                     action="Create"
                 end
                 local choice=dialog_yesno(action.." "..vsconf_file.."?")
-                cfile = io.open(vsconf_file..'debug', "w")
-                cfile:write(choice.."\nYES")
-                cfile:close()
+      
                 if choice == "YES" then
-                    cfile = io.open(vsconf_file, "w")
-                    UserPluginDir=  _get_vapoursynth_user_plugin()
-                    SystemPluginDir= _get_vapoursynth_system_plugin()
-                    cfile:write("UserPluginDir = "..UserPluginDir)
-                    write_vsvars_entry(vsvars, "UserPluginDir", UserPluginDir)
-                    cfile:write("\n")
-                    vsvars:write(",\n")
-                    cfile:write("SystemPluginDir = "..SystemPluginDir)
-                    write_vsvars_entry(vsvars, "SystemPluginDir", SystemPluginDir)
-                    cfile:close()
+                
+                    if (dump) then
+                        dump.write("\n[INFO]  Ask to "..action.. " " ..vsconf_file)
+                    end
+                
+                    update_vapoursynth_conf((vsvars, vsconf_file)
+             
                     dialog_info("\nNew '"..vsconf_file.."':\n" .."UserPluginDir = "..UserPluginDir.. "\n".."SystemPluginDir = "..SystemPluginDir.."\n\n".."Aegisub configfile vsvars.json updated")
                 else
+                
+                    if (dump) then
+                        dump.write("\n[INFO]  Let ".. vsconf_file .." unchanged ")
+                    end
+                
+                    read_vapoursynth_conf(vsvars, vsconf_file)
+                
                     fix=false
                 end
             end
@@ -707,8 +776,8 @@ if(LUAROCKS_LOADED) then
 
       local filename = vsvarsfile()
       
-      local vsvars_file = io.open(filename, "w")
-      
+      local tmp_vsvars_name=os.tmpname()
+      local tmp_vsvars_file = io.open(tmp_vsvars_name, "w")
       
       --https://aegisub.org/docs/latest/aegisub_path_specifiers/
       local pathspecs ={"data","user","temp","local"} --"script","video","audio" are unresolved
@@ -716,68 +785,92 @@ if(LUAROCKS_LOADED) then
       -- extra for aegisub_vs's cache dir
       table.insert(pathspecs,"cache")
       
-      if vsvars_file ~= nil then
-      
-            --file:write(";This is aegisub config path vars, do not edit")
-            local first=true
-            vsvars_file:write("{\n")
-            
-            local pathspec, userpath
-            
-             --======= retrieves aegisub path specifiers ==========
-             
-            for k, v in pairs(pathspecs) do
-                -- We use the internal path specifier decoding function available in lua 
-                if aegisub ~= nil and v ~= "cache" then
-                    pathspec=aegisub.decode_path("?"..v)
-                else --our failsafe replacement
-                    pathspec=aegisub_decode_path("?"..v)
-                end
-                if v == "user" then
-                    userpath=pathspec
-                end
-                -- Backslash need to be escaped to be json valid
-                pathspec=pathspec:gsub("\\","\\\\")
-                -- Save the config file in the ?user directory
-                if not first then
-                    vsvars_file:write(",\n")
-                end
-                first=false
-                write_vsvars_entry(vsvars_file, v, pathspec)
+        --file:write(";This is aegisub config path vars, do not edit")
+        local first=true
+        tmp_vsvars_file:write("{\n")
+        
+        local pathspec, userpath
+        
+         --======= retrieves aegisub path specifiers ==========
+         
+        if (dump) then
+            dump.write("\n[INFO] retrieves aegisub path specifiers .")
+        end
+         
+        for k, v in pairs(pathspecs) do
+            -- We use the internal path specifier decoding function available in lua 
+            if aegisub ~= nil and v ~= "cache" then
+                pathspec=aegisub.decode_path("?"..v)
+            else --our failsafe replacement
+                pathspec=aegisub_decode_path("?"..v)
             end
-            --==== Extra dirs luadir and vsdir ==================
-            
-            vsvars_file:write(",\n")
+            if v == "user" then
+                userpath=pathspec
+            end
+            -- Backslash need to be escaped to be json valid
+            pathspec=pathspec:gsub("\\","\\\\")
+            -- Save the config file in the ?user directory
+            if not first then
+                tmp_vsvars_file:write(",\n")
+            end
+            first=false
+            write_vsvars_entry(tmp_vsvars_file, v, pathspec)
+        end
+        --==== Extra dirs luadir and vsdir ==================
+        
+        if (dump) then
+            dump.write("\n[INFO] retrieves extra dirs luadir and vsdir .")
+        end
+        
+        tmp_vsvars_file:write(",\n")
 
-            if IS_WINDOWS then
-                pathspec=userpath.."\\automation\\autoload"
-            else
-                pathspec=userpath.."/automation/autoload"
-            end
-            pathspec=pathspec:gsub("\\","\\\\")
-            write_vsvars_entry(vsvars_file, "luadir", pathspec)
-            
-            vsvars_file:write(",\n")
-    
-            if IS_WINDOWS then
-                pathspec=userpath.."\\automation\\vapoursynth"
-            else
-                pathspec=userpath.."/automation/vapoursynth"
-            end
-            pathspec=pathspec:gsub("\\","\\\\")
-            write_vsvars_entry(vsvars_file, "vsdir", pathspec)
-            
-            --======= retrieves vapoursynth plugin paths  ==========
-            vsconf_file=locate_vapoursynth_conf()
-            if vsconf_file ~= nil then
-                fix=process_vapoursynth_conf_to_vsvars(vsvars_file, vsconf_file, fix)
-            end
-            
-            vsvars_file:write("\n}")
+        if IS_WINDOWS then
+            pathspec=userpath.."\\automation\\autoload"
+        else
+            pathspec=userpath.."/automation/autoload"
+        end
+        pathspec=pathspec:gsub("\\","\\\\")
+        write_vsvars_entry(tmp_vsvars_file, "luadir", pathspec)
+        
+        tmp_vsvars_file:write(",\n")
+
+        if IS_WINDOWS then
+            pathspec=userpath.."\\automation\\vapoursynth"
+        else
+            pathspec=userpath.."/automation/vapoursynth"
+        end
+        pathspec=pathspec:gsub("\\","\\\\")
+        write_vsvars_entry(tmp_vsvars_file, "vsdir", pathspec)
+        
+        --======= retrieves vapoursynth plugin paths  ==========
+        if (dump) then
+            dump.write("\n[INFO] retrieves vapoursynth plugin paths  .")
+        end
+        
+        vsconf_file=locate_vapoursynth_conf()
+        if vsconf_file ~= nil then
+            fix=process_vapoursynth_conf_to_vsvars(tmp_vsvars_file, vsconf_file, fix)
+        else
+            error("vapoursynth.conf file cannot be located!")
+        end
+        
+        tmp_vsvars_file:write("\n}")
+        tmp_vsvars_file:close()
+        
+       --aegisub.debug.out("\nSaving config file " ..filename)
+        if (dump) then
+            dump.write("\n[INFO] Saving config file " ..filename)
+        end
+        
+        local vsvars_file = io.open(filename, "w")
+        if vsvars_file ~= nil then
+            tmp_vsvars_file = io.open(tmp_vsvars_name, "r")
+            vsvars_file:write(tmp_vsvars_file:read("*all"))
             vsvars_file:close()
-           --aegisub.debug.out("\nSaving config file " ..filename)
-       end
-       
+            tmp_vsvars_file:close()
+            os.remove(tmp_vsvars_name)
+        end
+        
        return filename, fix
        
     end
@@ -786,8 +879,12 @@ if(LUAROCKS_LOADED) then
     -- @return nothing
     function build_configfile()
 
+        local dump=_G["dump"]
         -- Process is done when Aegisub is opened or tiggered by user
-        
+        if(dump) then
+            dump.write("\nWe are in Aegisub and script started.")
+        end
+            
         local filename, fix = write_vsvars_configfile(true)
         
         if not fix then
@@ -798,14 +895,28 @@ if(LUAROCKS_LOADED) then
            dialog_ok(msg)
         end 
         
+        if(dump) then
+            dump.write("\n=========\n")
+            --dump.close()
+        end
+        
     end
     
 else
 
     --luarocks is missing
     function build_configfile()
+            if(dump) then
+                dump.write("\nWe are in Aegisub and script crashed.")
+            end
+            
             local msg="Lurocks is missing, please install it, on linux you can use sudo apt install luarocks"
            dialog_ok(msg)
+           
+            if(dump) then
+                dump.write("\n=========\n")
+                --dump.close()
+            end
     end
     
 end
@@ -825,7 +936,6 @@ if aegisub ~= nil then
     
 else
    
-
    -- Luarocks 'peagisub' module needed by 'peagisub' command
     peagisub= {}
     
@@ -836,8 +946,9 @@ else
     
     if(LUAROCKS_LOADED) then
     
-        dump.write("\nstep1")
-        
+        if(dump) then
+            dump.write("\nstep1")
+        end
      
         peagisub.options= {     
             vsvars={
@@ -888,8 +999,10 @@ else
         end
     else
 
-        dump.write("\nstep2")
-    
+        if(dump) then
+            dump.write("\nstep2")
+        end
+        
         peagisub.options= {     
             vsvars={
             },
@@ -903,10 +1016,9 @@ else
        
     end
     
-    dump.write("\n=========\n")
-
     if(dump) then
-        dump.close()
+        dump.write("\n=========\n")
+        --dump.close()
     end
     
    return peagisub
