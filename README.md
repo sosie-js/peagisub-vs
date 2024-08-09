@@ -4,7 +4,7 @@
 ![peagisub banner](https://github.com/sosie-js/peagisub-vs/blob/1.6.0/peagisub.png#)
 ## News
 
-With 1.6, dump logging is working and I have been able to track he bug that corrupt the final vsvars.conf giving
+With 1.6, dump logging is working and I have been able to track the bug that corrupt the final vsvars.conf giving
 nil when fetching vapoursynth conf vars. An advanced aegiub Mock has been provided in src/aegisub.lua, 
 it emulates aegisub when script is launched outside aegisub and speeds devs.It uses get_fps.lua that rely on calc.lua and ffprobe need to be installed to make it work.
 
