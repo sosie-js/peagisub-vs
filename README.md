@@ -5,7 +5,7 @@
 ## News
 
 With 1.6 the aegiub Mock has been provided inc src/aegisub.lua, it emulates aegisub when script is launched
-outside aegisub and speeds devs.It uses get_fps.lua that rely on calc
+outside aegisub and speeds devs.It uses get_fps.lua that rely on calc.lua
 
 Prior version 1.5, code was still experimental due to a lack of knowledge in luarock integration. Thanks to advices and answers to my questions from [luke](https://github.com/gvvaughan/luke/pull/6) and [luarocks](https://github.com/luarocks/luarocks/discussions/1698) authors  - big thanks to them -  and tenacity, I finally converged to the pattern of a command [peagisub](src/peagisub) calling a builtin [peagisub.lua](src/peagisub.lua) 
 
