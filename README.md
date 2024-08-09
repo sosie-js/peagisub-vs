@@ -4,6 +4,9 @@
 ![peagisub banner](https://github.com/sosie-js/peagisub-vs/blob/1.6.0/peagisub.png#)
 ## News
 
+With 1.6 the aegiub Mock has been provided inc src/aegisub.lua, it emulates aegisub when script is launched
+outside aegisub and speeds devs.It uses get_fps.lua that rely on calc
+
 Prior version 1.5, code was still experimental due to a lack of knowledge in luarock integration. Thanks to advices and answers to my questions from [luke](https://github.com/gvvaughan/luke/pull/6) and [luarocks](https://github.com/luarocks/luarocks/discussions/1698) authors  - big thanks to them -  and tenacity, I finally converged to the pattern of a command [peagisub](src/peagisub) calling a builtin [peagisub.lua](src/peagisub.lua) 
 
 This was without loosing in mind that this last one should be recognized as macro script in aegisub. Doing this allow to fix and trigger either from aegisub macro graphically or from script lua/python or shell.  My need was to get aegisub env into vapoursynth script [aegisub-vs.py](https://github.com/arch1t3cht/Aegisub/blob/feature/automation/vapoursynth/aegisub_vs.py) from arch1t3cht aegisub fork to make it work outside too making video production easier. 
