@@ -1,9 +1,9 @@
 """
 File name: aegisub-vs.py
 Author: sosie-js / github 
-Created: 3.08.2024
-Version: 1.5
-Description: Bridge to vapoursynth using lua config helper (luarocks install --local peagisub-vs 1.0.5)
+Created: 9.08.2024
+Version: 1.6
+Description: Bridge to vapoursynth using lua config helper (luarocks install --local peagisub-vs 1.0.6)
 """
 
 from dataclasses import dataclass, field
@@ -23,7 +23,7 @@ def run_peagisub(cmd:str):
         result=subprocess.run(shlex.split('peagisub '+cmd), capture_output=True)
     except OSError as e:
         if e.errno == 2:
-            raise OSError("Peagisub command is required , please install with luarocks. You can use install scripts provided by the peagisub package or simply use luarocks install --local peagisub 1.0.5")
+            raise OSError("Peagisub command is required , please install with luarocks. You can use install scripts provided by the peagisub package or simply use luarocks install --local peagisub 1.0.6")
     return result.stdout.decode('utf-8').replace('\n','')
 
 """
