@@ -9,7 +9,7 @@
 --  requires optparse from G.V.Vaughan
 --  uses luarocks powers from Hisham Muhammad 
 --
---  Version 1.5
+--  Version 1.6
 --
 --  License: MIT/X, 
 -----------------------------------------------------------------------------
@@ -18,7 +18,7 @@
 script_name="Generate Aegisub config file"
 script_description="Exports paths specifiers to a config file to be used by python"
 script_author="SoSie-js / github"
-script_version="1.5"
+script_version="1.6"
 
 --Command extension, provides more details
 script_command="peagisub"
