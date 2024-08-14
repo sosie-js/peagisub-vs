@@ -662,7 +662,7 @@ if(LUAROCKS_LOADED) then
                     dump.write("\n[INFO]  generate the dummy one of http://www.vapoursynth.com/doc/installation.html")
                 end
             
-                create_dummy_vapoursynth_conf((vsvars, vsconf_file)
+                create_dummy_vapoursynth_conf(vsvars, vsconf_file)
          
             else
                 --[[Harmonize vapoursynth.conf with paths reachable in aegisub's world.
@@ -683,7 +683,7 @@ if(LUAROCKS_LOADED) then
                         dump.write("\n[INFO]  Ask to "..action.. " " ..vsconf_file)
                     end
                 
-                    update_vapoursynth_conf((vsvars, vsconf_file)
+                    update_vapoursynth_conf(vsvars, vsconf_file)
              
                     dialog_info("\nNew '"..vsconf_file.."':\n" .."UserPluginDir = "..UserPluginDir.. "\n".."SystemPluginDir = "..SystemPluginDir.."\n\n".."Aegisub configfile vsvars.json updated")
                 else
