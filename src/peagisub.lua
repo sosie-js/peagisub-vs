@@ -18,7 +18,7 @@ dump=false
 
 if aegisub ==nil then
     --use our private mock with scite
-    require "aegisub"
+    --require "aegisub"
 end
 
 --- Serializes a table as a string
