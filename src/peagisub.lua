@@ -9,7 +9,7 @@ peagisub.lua aka aegisub-vs.lua for aegisub
 script_name="Generate Aegisub config file"
 script_description="Exports paths specifiers to a config file to be used by python"
 script_author="SoSie-js / github"
-script_version="1.6"
+script_version="1.7"
 
 -- ============== Debug stuff ==================
 
@@ -857,11 +857,27 @@ if(LUAROCKS_LOADED) then
         tmp_vsvars_file:write("\n}")
         tmp_vsvars_file:close()
         
+        
+        --aegisub may not be installed create first user dir
+        PATH=require("path")
+        dir_user=PATH:ensure_dir_end(PATH:dirname(filename))
+         if PATH:exists(dir_user)  then
+            if (dump) then
+                dump.write("\n[INFO] Aegisub dir found in " ..dir_user)
+            end
+        else
+           if (dump) then
+                dump.write("\n[INFO] Creating aegisub dir " ..dir_user)
+            end
+            PATH:mkdir(dir_user)
+         end
+    
        --aegisub.debug.out("\nSaving config file " ..filename)
         if (dump) then
             dump.write("\n[INFO] Saving config file " ..filename)
         end
-        
+    
+        --Create the vsvars.conf file  
         local vsvars_file = io.open(filename, "w")
         if vsvars_file ~= nil then
             tmp_vsvars_file = io.open(tmp_vsvars_name, "r")
@@ -980,10 +996,15 @@ else
             if name == 'systemplugin' then
                 name="SystemPluginDir"
             end
-            local cfile, err= io.open(filename, "r")
-            local vsvars=json.decode (cfile:read("*all"), null, nil)
-            cfile:close()
-            return vsvars[name]
+            
+            local cfile= io.open(filename, "r")
+            if cfile ~=nil then
+                local vsvars=json.decode (cfile:read("*all"), null, nil)
+                cfile:close()
+                return vsvars[name]
+            else
+                return "Please create config file first with peagisub --createconfigfile"
+            end
         end
         
         -- Executes a given command
