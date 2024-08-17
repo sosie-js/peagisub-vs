@@ -1,8 +1,8 @@
 """
 File name: aegisub-vs.py
 Author: sosie-js / github 
-Created: 9.08.2024
-Version: 1.6
+Created: 17.08.2024
+Version: 1.7
 Description: Bridge to vapoursynth using lua config helper (luarocks install --local peagisub-vs 1.0.6)
 """
 
@@ -23,7 +23,7 @@ def run_peagisub(cmd:str):
         result=subprocess.run(shlex.split('peagisub '+cmd), capture_output=True)
     except OSError as e:
         if e.errno == 2:
-            raise OSError("Peagisub command is required , please install with luarocks. You can use install scripts provided by the peagisub package or simply use luarocks install --local peagisub 1.0.6")
+            raise OSError("Peagisub command is required , please install with luarocks. You can use install scripts provided by the peagisub package or simply use luarocks install --local peagisub 1.0.7")
     return result.stdout.decode('utf-8').replace('\n','')
 
 """
