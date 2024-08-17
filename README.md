@@ -3,7 +3,7 @@
 ## News
 
 Version 1.7 removes aegisub mock that broke builtin aegisub.lua, crashing peagisub with an insufficient error message
-It warns the user to create the configfile is not yet exist using command peagisub --createconfigfile
+It warns the user to create the mandatory configfile if not yet exists using command peagisub --createconfigfile
 
 With 1.6, dump logging is working and I have been able to track the bug that corrupt the final vsvars.conf giving
 nil when fetching vapoursynth conf vars. An advanced aegiub Mock has been provided in src/aegisub.lua, 
